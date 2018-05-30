@@ -32,15 +32,15 @@ pattern14 = re.compile("^(\+ *[Vv][Ee][Rr][Ss][Ii][Oo][Nn]: *)(.*)") #Version, A
 pattern15 = re.compile("^(\+ *[Cc][Oo][Mm][Pp][Ll][Ee][Tt][Ii][Oo][Nn]: *)(.*)") #Completion status
 patterns = [pattern2, pattern3, pattern4, pattern5, pattern6, pattern7, pattern8, 
             pattern9, pattern10, pattern11, pattern12, pattern13, pattern14, pattern15]
-
+pattern16 = re.compile("^(.*)(P)")
+pattern17 = re.compile("^(.*)(O)")
 #main work:
 with open(output_dir + "participant_data.csv", 'w+', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["Name_of_File", "Individuals_Present", "Language", "Participant_ID", 
             "DOE", "Context", "Transcriber", "LSID", "DOT", "Doublechecker", "Notes", 
             "Study", "Time", "Version", "Completion"])
-        for file in glob.glob(input_dir+"*/*.txt", recursive=True):
-            temp_patterns = patterns
+        for file in glob.glob(input_dir+"*/*.txt"):
             with open(file, "r") as f:
                 #initializing the row:
                 data_items = [file]
@@ -49,7 +49,7 @@ with open(output_dir + "participant_data.csv", 'w+', newline='') as csvfile:
                 #adding the information we have:
                 for line in f:
                     temp_patterns = patterns
-                    line = line.replace(u"\ufeff", "")
+                    line = line.replace("\ufeff", "")
                     line = line.strip()
                     if re.match(pattern1, line):
                         for pattern in patterns:
@@ -59,4 +59,22 @@ with open(output_dir + "participant_data.csv", 'w+', newline='') as csvfile:
                     else:
                         break
             writer.writerow(data_items)  
+
+with open(output_dir + "files_with_parent_otherexaminer.csv", "w+", newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow(["Name_of_File", "Parent_Present", "Other_Examiner_Present"])
+    for file in glob.glob(input_dir+"*/*.txt"):
+        with open(file, "r") as f:
+            data_items = [file, "0", "0"]
+            for line in f:
+                line = line.replace("\ufeff", "")
+                line = line.strip()
+                if re.match(pattern2, line):
+                    participants = re.match(pattern2, line).group(2)
+                    if re.match(pattern16, participants):
+                        data_items[1] = "1"
+                    if re.match(pattern17, participants):
+                        data_items[2] = "1"
+                    break
+        writer.writerow(data_items)            
 
